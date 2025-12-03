@@ -18,7 +18,7 @@ The calibrated model parameters and results are saved in model_QF.mat.
 
 2. script_analisiMP4.m
 
-This script implements the monetary policy sensitivity analysis of the Euro OIS term structure, following the methodology described in the paper. It uses the calibrated model output stored in model_QF.mat as well as teh original data in "data_QF.mat".
+This script implements the monetary policy sensitivity analysis of the Euro OIS term structure, following the methodology described in the paper. It uses the calibrated model output stored in model_QF.mat as well as the original data in "data_QF.mat".
 
 Disclaimer
 
