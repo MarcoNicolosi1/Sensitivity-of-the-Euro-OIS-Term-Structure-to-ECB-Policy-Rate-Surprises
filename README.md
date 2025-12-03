@@ -10,7 +10,7 @@ The purpose of this code is to calibrate the quantitative finance model describe
 
 The main scripts included in this repository are:
 
-1. script_calibration.m
+1. script_calibration_QF.m
 
 This script calibrates the model using the dataset stored in data_QF.mat.
 
