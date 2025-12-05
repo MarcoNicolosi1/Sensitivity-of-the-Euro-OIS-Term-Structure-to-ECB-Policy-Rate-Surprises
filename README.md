@@ -14,8 +14,6 @@ The main scripts included in this repository are:
 
 This script calibrates the model using the time-series of yields on EuroSTR stored in data.mat. 
 
-The code allows to calibrate the model selecting a different tome window (rows 71-72) as well as a asubset of times to maturity (rows 81-82) 
-
 The calibrated model parameters and results are saved in calibrated_model.mat.
 
 2. script_sensitivity.m
