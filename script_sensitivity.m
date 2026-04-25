@@ -85,6 +85,17 @@ for mat=1:17
     ind=ind+1;
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COMPARISON WITH THE AFNS MODEL
+
+calibrated_model_AFNS = 'Cal_AFNS_full.mat';
+
+%% Compute the observed variations and the model variations of the Ester-zero-yields on the dates with larger surprises
+
+[Deltay_d_AFNS,hat_Deltay_d_AFNS]=compute_Delta(Delta_Ester,DJ_d,h_shift,calibrated_model_AFNS,'AFNS');
+[Deltay_u_AFNS,hat_Deltay_u_AFNS]=compute_Delta(Delta_Ester,DJ_u,h_shift,calibrated_model_AFNS,'AFNS');
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FIGURES
 
@@ -95,21 +106,31 @@ maturities={'1d','2d','1w','1m','3m','6m','9m','1y','2y','3y','4y','5y','6y','7y
 [DJ,ind]=sort(DJ_u.F1,'descend');
 dd=DJ_u.date(ind);
 
-figure();
+h1 = figure(1);
 for i=1:2
     t_0=dd(i);
-    out1=sensitivity_fun(t_0,10^-4*DJ(i),h_shift,calibrated_model);
+    out1=sensitivity_fun2(t_0,10^-4*DJ(i),h_shift,calibrated_model);
+    out1_AFNS=sensitivity_fun2(t_0,10^-4*DJ(i),h_shift,calibrated_model_AFNS,'AFNS');
+    
     subplot(1,2,i)
     if not(isempty(out1.Ey))
         plot([1:17],out1.Ey*10^4,'+-',[1:17],Delta_Ester.y(Delta_Ester.date==t_0,:),'o:' ,'linewidth',2)
-        legend('model','realized','Location','southeast' )
     end
+    if not(isempty(out1_AFNS.Ey))
+        hold on;
+        plot([1:17],out1_AFNS.Ey*10^4,'d-','linewidth',2)
+        legend('DJTA','realized','AFNS','Location','northeast' )
+        hold off
+    end
+    
     title(['t = ', datestr(t_0),'; \Delta f_t =  ', num2str(DJ(i)), ' bps'])
     xticks([1:17])
     xticklabels({'1d','2d','1w','1m','3m','6m','9m','1y','2y','3y','4y','5y','6y','7y','8y','9y','10y'});
     xlim([1,17])
-    ylim([-25 25])
+    ylim([-5 45])
 end
+%SaveFigureFullScreenPDF(h1,'real_sensitivity_up_new',[30,10])
+
 
 
 %FIGURE 1(b) of the paper
@@ -117,23 +138,27 @@ end
 [DJ,ind]=sort(DJ_d.F1,'ascend');
 dd=DJ_d.date(ind);
 
-figure();
+h10 = figure(10);
 for i=1:2
     t_0=dd(i);
-    out1=sensitivity_fun(t_0,10^-4*DJ(i),h_shift,calibrated_model);
+    out1=sensitivity_fun2(t_0,10^-4*DJ(i),h_shift,calibrated_model);
+    out1_AFNS=sensitivity_fun2(t_0,10^-4*DJ(i),h_shift,calibrated_model_AFNS,'AFNS');
     subplot(1,2,i)
     plot([1:17],10^4*out1.Ey,'+-',[1:17],Delta_Ester.y(Delta_Ester.date==t_0,:),'o:' ,'linewidth',2)
-    legend('model','realized','location',' northeast' )
+    hold on;
+    plot([1:17],10^4*out1_AFNS.Ey,'d-','linewidth',2)
+    hold off
+    legend('DJTA','realized','AFNS','location',' southeast' )
     title(['t = ', datestr(t_0),'; \Delta f_t =  ', num2str(DJ(i)), ' bps'])
     xticks([1:17])
     xticklabels({'1d','2d','1w','1m','3m','6m','9m','1y','2y','3y','4y','5y','6y','7y','8y','9y','10y'});
     xlim([1,17])
-    ylim([-25 25])
+    ylim([-35 5])
 end
-
+%SaveFigureFullScreenPDF(h10,'real_sensitivity_down_new',[30,10])
 
 % FIGURE 2 of the paper
-figure();
+h2 = figure(2);
 mat_b1=length(b1(2,:));
 plot((1:mat_b1),b1(2,:),'o:','LineWidth',2)
 xticks([1:mat_b1])
@@ -142,25 +167,33 @@ xlim([1,17])
 hold on
 Beta_mod=[hat_Deltay_d.beta;hat_Deltay_d.beta];
 M_beta_mod=mean(Beta_mod,1);
+Beta_mod_AFNS=[hat_Deltay_d_AFNS.beta;hat_Deltay_d_AFNS.beta];
+M_beta_mod_AFNS=mean(Beta_mod_AFNS,1);
 plot((1:17),M_beta_mod,'+:','LineWidth',2)
+plot((1:17),M_beta_mod_AFNS,'d:','LineWidth',2)
 plot((1:mat_b1),squeeze(b1_int(2,:,:)),'.:','LineWidth',2)
 grid on
-legend('\beta(\tau)','mean(\beta^M(t,\tau))','  conf. int. \beta(\tau)','conf. int. \beta(\tau)')
+legend('\beta(\tau)','mean(\beta^{DJTA}(t,\tau))','mean(\beta^{AFNS}(t,\tau))','  conf. int. \beta(\tau)','conf. int. \beta(\tau)')
+
+%SaveFigureFullScreenPDF(h2,'beta_regression',[30,10])
 
 
 % FIGURE 4 of the paper
-figure();
+h4 = figure(4);
 start=1;
 PCT=prctile([hat_Deltay_d.res;hat_Deltay_u.res],[5,25,50,75,95]);
 plot((start:17),PCT(:,start:end),'+:','LineWidth',2)
 xticks([start:17])
 xticklabels(maturities(start:end));
 xlim([start,17])
-grid on
+ylim([-11,11])
 hold off
-
+%SaveFigureFullScreenPDF(h4,'pct_errors',[30,10])
 
 return
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -172,7 +205,12 @@ function Delta_OIS=clean(Delta_OIS,BCE_meetings,time_interval)
     end
 end
 
-function  [Deltay,Deltay_hat]=compute_Delta(Delta_Ester,DJ,h_shift,calibrated_model)
+function  [Deltay,Deltay_hat]=compute_Delta(Delta_Ester,DJ,h_shift,calibrated_model,model)
+    
+    if nargin == 4
+        model = '3F';
+    end
+
     N=length(DJ.date);
     Deltay.y=NaN(N,17);%
     Deltay_hat.alpha=NaN(N,17);
@@ -184,7 +222,12 @@ function  [Deltay,Deltay_hat]=compute_Delta(Delta_Ester,DJ,h_shift,calibrated_mo
             Deltay.y(i,:)=Delta_Ester.y(ind,:);
             Deltay.date(i)=Delta_Ester.date(ind);
             Deltay_hat.date(i)=Delta_Ester.date(ind);
-            out1=sensitivity_fun(DJ.date(i),10^-4*DJ.F1(i),h_shift,calibrated_model);
+            switch model
+                case '3F'
+                    out1=sensitivity_fun2(DJ.date(i),10^-4*DJ.F1(i),h_shift,calibrated_model);
+                case 'AFNS'
+                    out1=sensitivity_fun2(DJ.date(i),10^-4*DJ.F1(i),h_shift,calibrated_model,model);
+            end
             Deltay_hat.y(i,:)=10^4*out1.Ey; %Ey=alpha+beta*DJ.F1
             Deltay_hat.alpha(i,:)=out1.alpha;
             Deltay_hat.beta(i,:)=out1.beta;
