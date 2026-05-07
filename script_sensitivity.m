@@ -172,7 +172,6 @@ M_beta_mod_AFNS=mean(Beta_mod_AFNS,1);
 plot((1:17),M_beta_mod,'+:','LineWidth',2)
 plot((1:17),M_beta_mod_AFNS,'d:','LineWidth',2)
 plot((1:mat_b1),squeeze(b1_int(2,:,:)),'.:','LineWidth',2)
-grid on
 legend('\beta(\tau)','mean(\beta^{DJTA}(t,\tau))','mean(\beta^{AFNS}(t,\tau))','  conf. int. \beta(\tau)','conf. int. \beta(\tau)')
 
 %SaveFigureFullScreenPDF(h2,'beta_regression',[30,10])
@@ -189,6 +188,17 @@ xlim([start,17])
 ylim([-11,11])
 hold off
 %SaveFigureFullScreenPDF(h4,'pct_errors',[30,10])
+
+h41 = figure(41);
+start=1;
+PCT=prctile([hat_Deltay_d_AFNS.res;hat_Deltay_u_AFNS.res],[5,25,50,75,95]);
+plot((start:17),PCT(:,start:end),'+:','LineWidth',2)
+xticks([start:17])
+xticklabels(maturities(start:end));
+xlim([start,17])
+ylim([-15,15])
+title('Error Percentiles for the AFNS model')
+hold off
 
 return
 
